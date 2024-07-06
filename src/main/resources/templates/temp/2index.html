@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th.="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+
+    <title>Products</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/style1.css">
+
+</head>
+<body>
+<div>
+    <img class="banner" src="https://static.vecteezy.com/system/resources/thumbnails/002/558/861/small/blue-background-with-hexagonal-grid-header-abstract-stainless-steel-banner-modern-creative-design-temlates-colorful-illustration-vector.jpg" alt="Banner">
+
+</div>
+
+<div class="header">
+    <div class="container">
+        <h1>Our Products</h1>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="category-list">
+                <h4>Menu</h4>
+                <a href="/product/adminPastOrders" class="btn btn-sm btn-primary">All orders</a><br>
+                <a href="/login" class="btn btn-sm btn-outline-primary">Login</a><br>
+                <a href="/product/pastOrders" class="btn btn-sm btn-primary">My Past Orders</a><br>
+                <a th:href="@{/user/index}" class="btn btn-sm btn-outline-primary">Users</a>
+
+                <a th:href="@{/category/list}" class="btn btn-sm btn-primary">Edit Categories</a><br>
+
+                <button onclick="location.href='/category/new'" class="btn btn-sm btn-outline-primary">Add new Category</button>
+            </div>
+        </div>
+
+
+
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between mb-3">
+            <button onclick="location.href='/product/new-form'" class="btn btn-primary add-button">Add New Product</button>
+            <a href="/product/cart" class="btn btn-outline-primary view-cart">View Cart</a>
+        </div>
+
+        <form class="search-form form-inline justify-content-center" method="get" action="/product/search">
+            <input type="text" name="query" class="form-control mr-2" placeholder="Search by name">
+            <button type="submit">Search</button>
+        </form>
+
+        <form class="form-inline mt-3">
+            <label class="mr-2">Filter by Category:</label>
+            <select class="form-control" id="categoryFilter" onchange="applyCategoryFilter(this)">
+                <option value="">All Categories</option>
+                <th:block th:each="category : ${categories}">
+                    <option th:value="${category.id}" th:text="${category.name}" th:selected="${category.id == selectedCategoryId}"></option>
+                </th:block>
+            </select>
+        </form><br><br>
+
+    <div class="row">
+        <div th:each="product : ${products}" class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column align-items-center">
+                    <h5 class="card-title font-weight-bold text-center mb-3">
+                        <a th:href="@{'/product/details?id=' + ${product.id}}" th:text="${product.name}"></a>
+                    </h5>
+                <div class="preview-image text-center">
+                    <img th:if="${product.imageUrl}" th:src="${product.imageUrl}" class="product-image" alt="Product Image">
+                </div>
+                <div class="card-details text-center mt-3">
+                    <form th:action="@{/product/addtocart}" method="post">
+                        <input type="hidden" name="id" th:value="${product.id}">
+                        <button type="submit" class="btn-add-to-cart btn-sm btn-success">Add to Cart</button>
+                    </form>
+                    <p class="card-text mx-3" th:text="'$' + ${product.price}"></p>
+                    <form th:action="@{/product/update}" method="get">
+                        <input type="hidden" name="id" th:value="${product.id}">
+                        <button type="submit" class="btn-edit btn-sm btn-primary">Edit</button>
+                    </form>
+                </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+<script>
+    function applyCategoryFilter(select){
+        var id = select.value;
+        window.location.href='/product/index' + (id? '?id= ' + id : '');
+    }
+</script>
+
+
+
+</body>
+</html>

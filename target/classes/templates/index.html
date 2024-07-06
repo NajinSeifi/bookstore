@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Users Table</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="author" content="">
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/vendor.css">
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Italiana&family=Mulish:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;0,1000;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900;1,1000&display=swap" rel="stylesheet">
+  <!-- script
+  ================================================== -->
+  <script src="/css/js/modernizr.js"></script>
+</head>
+<div th:replace="fragments/header :: header"></div>
+<br><br><br><br><br>
+<body>
+
+<div class="container table-container align-items-center">
+  <div class="row">
+    <div class="col-md-12">
+      <h1>Users</h1>
+      <table class="table">
+        <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Password</th>
+          <th>Phone</th>
+          <th>Address</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="user : ${users}">
+          <td th:text="${user.id}"></td>
+          <td th:text="${user.username}"></td>
+          <td th:text="${user.password}"></td>
+          <td th:text="${user.phone}"></td>
+          <td th:text="${user.address}"></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div th:replace="fragments/footer :: footer"></div>
+<script src="/css/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/css/js/bootstrap.bundle.min.js"></script>
+<script type="text/javascript" src="/css/js/plugins.js"></script>
+<script type="text/javascript" src="/css/js/script.js"></script>
+</body>
+</html>
