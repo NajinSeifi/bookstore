@@ -86,18 +86,18 @@
     </div>
   </div>
 
-  <div class="swiper product-swiper  mx-5 align-items-center">
+  <div class="swiper product-swiper mx-5 ">
 
-    <div class="swiper-wrapper  align-items-center">
-      <div  th:each="product : ${cart}"  class="swiper-slide align-items-center">
-        <div class="product-card position-relative align-items-center ">
+    <div class="swiper-wrapper ">
+      <div  th:each="product : ${cart}"  class="swiper-slide ">
+        <div class="product-card position-relative  ">
           <div class="image-holder zoom-effect">
             <img th:if="${product.imageUrl}" th:src="${product.imageUrl}" class="img-fluid zoom-in product-image" alt="Product Image">
-            <div class="cart-concern position-absolute  align-items-center">
+            <div class="cart-concern position-absolute ">
               <div class="cart-button">
                 <form th:action="@{/product/removefromcart}" method="post">
                   <input type="hidden" name="id" th:value="${product.id}">
-                  <button type="submit" class="btn btn-remove btn-sm mb-2" onclick="return confirm('Are you sure you want to remove this product from your cart?')">Remove from Cart</button>
+                  <button type="submit" class="btn btn-remove  " onclick="return confirm('Are you sure you want to remove this product from your cart?')">Remove from Cart</button>
                 </form>
               </div>
             </div>

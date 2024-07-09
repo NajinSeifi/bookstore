@@ -36,7 +36,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/login").permitAll()
                         .requestMatchers("/register", "/css/**").permitAll()
-                        .requestMatchers("/product/adminPastOrders**","/product/update","/product/delete", "/product/create","/category/new","/category/list" ).hasRole("ROLE-ADMIN")
+                        .requestMatchers("/product/adminPastOrders**","/product/update","/product/delete", "/product/create", "/product/new-form","/category/new","/category/list" ,"/user/index").hasRole("ROLE-ADMIN")
                         .requestMatchers(getOpenedResources()).permitAll()
                         .anyRequest().authenticated())
                 .formLogin(form->form
@@ -61,6 +61,7 @@ public class SecurityConfig {
                 "/product/filterByAuthor",
                 "/product/advanced",
                 "/product/filterByPrice",
+                "/product/import",
         };
     }
 

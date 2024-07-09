@@ -51,6 +51,13 @@
     <div id="imagePreview"></div><br>
 
 
+    <div th:if="${#lists.contains(product.categories, @categoryRepository.findById(3).orElse(null))}">
+      <label for="fictionType">Fiction Type:</label>
+      <input type="text" id="fictionType" name="fictionType" th:value="${product.attributes?.fictionType}"><br><br>
+    </div>
+
+
+
     <button type="submit" class="btn btn-primary">Update Product</button>
   </form>
   </div>

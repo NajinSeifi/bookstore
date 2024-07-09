@@ -34,23 +34,32 @@
 <form action="/product/create" method="post"  enctype="multipart/form-data">
   <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
   <label for="name">Name:</label>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="name" name="name" required><br><br><br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="name" name="name" ><br><br><br>
 
   <label for="price">Price:</label>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="number" id="price" name="price" required><br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="number" id="price" name="price" ><br>
 
   <label for="details">Details:</label>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<textarea id="details" name="details" rows="4" required></textarea><br><br><br><br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<textarea id="details" name="details" rows="4" ></textarea><br><br><br><br>
 
   <label for="productCount">Product_Count:</label>
-  <input type="text" id="productCount" name="productCount"  required><br><br><br><br>
+  <input type="text" id="productCount" name="productCount"  ><br><br><br><br>
 
   <label for="imageUrl">Image URL:</label>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="imageUrl" name="imageUrl" placeholder="Image URL" onchange="previewImage(this.value)"><br><br><br>
 
 
-  <button type="submit" class="btn btn-primary">Submit</button>
+  <button type="submit" class="btn btn-primary">Submit</button><br><br><br><br>
 </form>
+    <div class="container ">
+      <h3 class="text-center">Upload CSV or Excel File to Add Products</h3><br>
+      <form id="uploadForm" method="post" action="/product/parse" enctype="multipart/form-data">
+        <div class="list-group mb-3  align-items-center">
+          <input type="file" class="form-control-file" id="file" name="file" accept=".csv" ><br>
+          <button type="submit" class="btn btn-primary ">Upload</button>
+        </div>
+      </form>
+    </div>
 </div>
 </div>
 <script>
@@ -58,6 +67,11 @@
     var imgPreview = document.getElementById('imagePreview');
     imgPreview.innerHTML = '<img src="' + url + '" alt="Image Preview" style="max-width: 200px; max-height: 200px;">';
   }
+</script>
+<script>
+  document.getElementById('file').onchange=function (){
+    document.getElementById('uploadForm').submit();
+  };
 </script>
 <div th:replace="fragments/footer :: footer"></div>
 <script src="/css/js/jquery-1.11.0.min.js"></script>

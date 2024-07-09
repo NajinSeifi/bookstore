@@ -2,23 +2,42 @@ package com.example.Shop.Controller;
 
 import com.example.Shop.Entity.*;
 import com.example.Shop.Repository.*;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.CSVWriter;
+import com.opencsv.exceptions.CsvException;
+import com.opencsv.exceptions.CsvValidationException;
+import jakarta.servlet.http.HttpServletResponse;
+import org.apache.catalina.webresources.StandardRoot;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.codehaus.groovy.tools.shell.IO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.support.SessionStatus;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -43,10 +62,8 @@ public class ProductController {
     @Autowired
     private AuthorRepository authorRepository;
 
-    @ModelAttribute("cart")
-    public List<Product> cart(){
-        return new ArrayList<>();
-    }
+    private static final Logger logger = LoggerFactory.getLogger(ProductController.class);
+
 
     @ModelAttribute("totalPrice")
     public Double totalPrice(){
@@ -124,10 +141,14 @@ public class ProductController {
 
         orderRepository.save(order);
         sessionStatus.setComplete();
+        redirectAttributes.addFlashAttribute("message", "your order has been finalized.");
         return "redirect:/product/index";
+    } @ModelAttribute("cart")
+    public List<Product> cart(){
+        return new ArrayList<>();
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(ProductController.class);
+
 
     @PostMapping("/submit")
     @Secured("ADMIN")
@@ -234,7 +255,6 @@ public class ProductController {
     @PostMapping("/create")
     public String addProduct(@ModelAttribute Product product) {
         productRepository.save(product);
-
         return "redirect:/product/index";
     }
     private byte[] downloadImage(String imageUrl) throws IOException {
@@ -266,20 +286,35 @@ public class ProductController {
                          @RequestParam("updatedProduct.price") double price,
                          @RequestParam("updatedProduct.details") String details,
                          @RequestParam("updatedProduct.imageUrl") String imageUrl,
-                         @RequestParam("updatedProduct.productCount") int productCount, @ModelAttribute Product product) throws IOException {
+                         @RequestParam("updatedProduct.productCount") int productCount,
+                         @ModelAttribute Product product,
+                         @RequestParam("categoryIds") List<Long> categoryIds,
+                         @RequestParam(value = "fictionType", required = false)String fictionType) throws IOException {
 
-        productRepository.findById(id)
+        Product existingProduct = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid product id: " + id));
 
-        product.setName(name);
-        product.setPrice(price);
-        product.setDetails(details);
-        product.setImageUrl(imageUrl);
-        product.setProductCount(productCount);
+        existingProduct.setName(name);
+        existingProduct.setPrice(price);
+        existingProduct.setDetails(details);
+        existingProduct.setImageUrl(imageUrl);
+        existingProduct.setProductCount(productCount);
+
+        for(Long categoryId :categoryIds){
+            Category category = categoryRepository.findById(categoryId)
+                    .orElseThrow(()->new IllegalArgumentException("Invalid category id: " + id));
+            existingProduct.addCategory(category);
+        }
+        if (fictionType != null && existingProduct.getCategories().stream().anyMatch(category -> category.getId() == 3)) {
+            Attributes attributes = new Attributes(fictionType);
+            existingProduct.addAttributes(attributes);
+        } else {
+            existingProduct.setAttributes(null);
+        }
 
 
 
-        productRepository.save(product);
+        productRepository.save(existingProduct);
         return "redirect:/product/index";
     }
 
@@ -368,5 +403,143 @@ public class ProductController {
 
         return "Product/index";
     }
+
+
+
+
+    @PostMapping("/parse")
+    public String parseFile(@RequestParam MultipartFile file) throws IOException, CsvException {
+        String fileName = file.getOriginalFilename();
+        if (fileName.endsWith(".csv")) {
+            parseCSV(file);
+        } else if (fileName.endsWith(".xls") || fileName.endsWith(".xlsx")) {
+            parseExcel(file);
+        } else {
+            throw new IllegalArgumentException("unsupported file type.");
+        }
+        return "redirect:/product/index";
+    }
+    private void parseExcel(MultipartFile file) throws IOException{
+        List<Product> products = new ArrayList<>();
+        Workbook workbook= new XSSFWorkbook(file.getInputStream());
+        Sheet sheet = workbook.getSheetAt(0);
+        Iterator<Row> rows = sheet.iterator();
+        if (rows.hasNext()){
+            rows.next();
+        }
+        while (rows.hasNext()){
+            Row row=rows.next();
+            Product product = new Product();
+            product.setName(row.getCell(0).getStringCellValue());
+            product.setPrice(row.getCell(1).getNumericCellValue());
+            product.setDetails(row.getCell(2).getStringCellValue());
+            product.setProductCount((int) row.getCell(3).getNumericCellValue());
+            product.setImageUrl((row.getCell(4)).getStringCellValue());
+            products.add(product);
+
+             if(products.size()>=10){
+                 productRepository.saveAll(products);
+                 products.clear();
+            }
+        }
+        productRepository.saveAll(products);
+        workbook.close();
+    }
+    private void parseCSV(MultipartFile file) throws IOException,CsvException{
+        Reader reader = new InputStreamReader(file.getInputStream());
+        CSVReader csvReader = new CSVReader(reader);
+        csvReader.readNext();
+
+        List<String[]> rows = csvReader.readAll();
+        List<Product> products = new ArrayList<>();
+
+        for (String[] row : rows){
+
+            Product product = new Product();
+            product.setName(row[0]);
+            product.setPrice(Double.parseDouble(row[1]));
+            product.setDetails(row[2]);
+            product.setProductCount(Integer.parseInt(row[3]));
+            product.setImageUrl(row[4]);
+
+            products.add(product);
+
+            if(products.size() >= 10){
+                productRepository.saveAll(products);
+                products.clear();
+            }
+        }
+        productRepository.saveAll(products);
+    }
+    @GetMapping("/export")
+    @ResponseBody
+    public void exportData(@RequestParam(name="format") String format, HttpServletResponse response)throws IOException {
+        if ("csv".equalsIgnoreCase(format)) {
+            exportCSV(response);
+        } else if ("excel".equalsIgnoreCase(format)) {
+            exportExcel(response);
+        }
+    }
+
+    private void exportExcel(HttpServletResponse response) throws IOException{
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment;filename=\"products.xlsx\"");
+
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Products");
+
+        Row headerRow = sheet.createRow(0);
+        headerRow.createCell(0).setCellValue("Name");
+        headerRow.createCell(1).setCellValue("Price");
+        headerRow.createCell(2).setCellValue("Details");
+        headerRow.createCell(3).setCellValue("ProductCount");
+        headerRow.createCell(4).setCellValue("ImageUrl");
+
+        List<Product> products = productRepository.findAll();
+        int rowIdx=1;
+        for(Product product : products){
+            Row row = sheet.createRow(rowIdx++);
+            row.createCell(0).setCellValue(product.getName());
+            row.createCell(1).setCellValue(product.getPrice());
+            row.createCell(2).setCellValue(product.getDetails());
+            row.createCell(3).setCellValue(product.getProductCount());
+            row.createCell(4).setCellValue(product.getImageUrl());
+        }
+        workbook.write(response.getOutputStream());
+        workbook.close();
+    }
+
+    private void exportCSV(HttpServletResponse response)throws IOException{
+        response.setContentType("text/csv");
+        response.setHeader("Content-Disposition", "attachment; filename=\"products.csv\"");
+
+        PrintWriter writer = response.getWriter();
+        CSVWriter csvWriter = new CSVWriter(writer,
+                CSVWriter.DEFAULT_SEPARATOR,
+                CSVWriter.NO_QUOTE_CHARACTER,
+                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                CSVWriter.DEFAULT_LINE_END);
+        String[] headerRecord ={"Name", "Price","Details","ProductCount", "ImageUrl"};
+        csvWriter.writeNext(headerRecord);
+
+        List<Product> products= productRepository.findAll();
+
+        for(Product product: products){
+            String details = product.getDetails().replace("\"", "\"\"");
+            details = details.replaceAll("\\R", " ");
+            details="\"" + details + "\"";
+            String[] data={
+                    product.getName(),
+                    String.valueOf(product.getPrice()),
+                    details,
+                    String.valueOf(product.getProductCount()),
+                    product.getImageUrl()
+            };
+            csvWriter.writeNext(data);
+        }
+        csvWriter.close();
+     }
+
+
 
 }

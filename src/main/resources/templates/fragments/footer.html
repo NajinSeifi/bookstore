@@ -13,7 +13,7 @@
           <div class="col-lg-3 col-sm-6 pb-3" data-aos="fade" data-aos-easing="ease-in" data-aos-duration="1000" data-aos-once="true">
             <div class="footer-menu">
               <img src="/css/images/main-logo.png" alt="logo" class="mb-2">
-              <p>Nunc tristique facilisis consectetur vivamus ut porta porta aliquam vitae vehicula leo nullam urna lectus.</p>
+              <p>Explore a world of books and discover your next great read. Happy browsing!</p>
             </div>
           </div>
           <div class="col-lg-2 col-sm-6 pb-3" data-aos="fade" data-aos-easing="ease-in" data-aos-duration="1200" data-aos-once="true">
@@ -131,6 +131,18 @@
     </div>
   </div>
 </footer>
+<script th:inline="javascript">
+  var message = /*[[${#strings.escapeJavaScript(message)}]]*/ null;
+  if(message){
+    alert(message);
+  }
+</script>
+<script th:inline="javascript">
+  var error = /*[[${#strings.escapeJavaScript(error)}]]*/ null;
+  if(error){
+    alert(error);
+  }
+</script>
 
 </body>
 </html>

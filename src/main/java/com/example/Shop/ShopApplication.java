@@ -21,7 +21,7 @@ public class ShopApplication {
 	@Bean
 	public ApplicationRunner openBrowser() {
 		return args -> {
-			String url = "http://localhost:8080/product/index";
+			String url = "http://localhost:8082/product/index";
 			openWebpage(url);
 		};
 	}
